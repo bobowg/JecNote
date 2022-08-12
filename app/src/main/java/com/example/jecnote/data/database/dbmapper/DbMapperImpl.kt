@@ -3,6 +3,7 @@ package com.example.jecnote.data.database.dbmapper
 import com.example.jecnote.data.database.model.ColorDbModel
 import com.example.jecnote.data.database.model.NoteDbModel
 import com.example.jecnote.domain.model.ColorModel
+import com.example.jecnote.domain.model.NEW_NOTE_ID
 import com.example.jecnote.domain.model.NoteModel
 
 class DbMapperImpl:DbMapper {
@@ -17,27 +18,40 @@ class DbMapperImpl:DbMapper {
     }
 
     override fun mapNote(noteDbModel: NoteDbModel, colorDbModel: ColorDbModel): NoteModel {
-        TODO("Not yet implemented")
+        val color = mapColor(colorDbModel)
+        val isCheckedOff = with(noteDbModel) { if (canBeCheckedOff) isCkeckedOff else null }
+        return with(noteDbModel) { NoteModel(id, title, content, isCheckedOff, color) }
     }
 
-    override fun mapColors(colorDbModels: List<ColorDbModel>): List<ColorModel> {
-        TODO("Not yet implemented")
+    override fun mapColors(colorDbModels: List<ColorDbModel>): List<ColorModel> =
+        colorDbModels.map { mapColor(it) }
+
+    override fun mapColor(colorDbModel: ColorDbModel): ColorModel =
+        with(colorDbModel) { ColorModel(id, name, hex) }
+
+    override fun mapDbNote(note: NoteModel): NoteDbModel = with(note) {
+        val canBeCheckedOff = isCheckedOff != null
+        val isCheckedOff = isCheckedOff ?: false
+        if (id == NEW_NOTE_ID) {
+            NoteDbModel(
+                title = title,
+                content = content,
+                canBeCheckedOff = canBeCheckedOff,
+                isCkeckedOff = isCheckedOff,
+                colorId = color.id,
+                isInTrash = false
+            )
+        }else{
+            NoteDbModel(id,title,content,canBeCheckedOff,isCheckedOff,color.id,false)
+        }
     }
 
-    override fun mapColor(colorDbModel: ColorDbModel): ColorModel {
-        TODO("Not yet implemented")
+    override fun mapDbColors(colors: List<ColorModel>): List<ColorDbModel> = colors.map {
+        mapDbColor(it)
     }
 
-    override fun mapDbNote(note: NoteModel): NoteDbModel {
-        TODO("Not yet implemented")
-    }
-
-    override fun mapDbColors(colors: List<ColorModel>): List<ColorDbModel> {
-        TODO("Not yet implemented")
-    }
-
-    override fun mapDbColor(color: ColorModel): ColorDbModel {
-        TODO("Not yet implemented")
+    override fun mapDbColor(color: ColorModel): ColorDbModel = with(color){
+        ColorDbModel(id,hex,name)
     }
 
 }

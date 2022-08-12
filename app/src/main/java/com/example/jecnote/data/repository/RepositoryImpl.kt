@@ -1,62 +1,120 @@
 package com.example.jecnote.data.repository
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import com.example.jecnote.data.database.dao.ColorDao
 import com.example.jecnote.data.database.dao.NoteDao
 import com.example.jecnote.data.database.dbmapper.DbMapper
+import com.example.jecnote.data.database.model.ColorDbModel
+import com.example.jecnote.data.database.model.NoteDbModel
 import com.example.jecnote.domain.model.ColorModel
 import com.example.jecnote.domain.model.NoteModel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class RepositoryImpl(
     private val noteDao: NoteDao,
     private val colorDao: ColorDao,
     private val dbMapper: DbMapper
-):Repository {
-    override fun getAllNotesNotInTrash(): LiveData<List<NoteModel>> {
-        TODO("Not yet implemented")
+) : Repository {
+
+    private val notesNotInTrashLiveData: MutableLiveData<List<NoteModel>> by lazy {
+        MutableLiveData<List<NoteModel>>()
     }
 
-    override fun getALLNotesInTrash(): LiveData<List<NoteModel>> {
-        TODO("Not yet implemented")
+    private val notesInTrashLiveData: MutableLiveData<List<NoteModel>> by lazy {
+        MutableLiveData<List<NoteModel>>()
     }
 
-    override fun getNote(id: Long): LiveData<NoteModel> {
-        TODO("Not yet implemented")
+    init {
+        initDatabase(this::updateNotesLiveData)
     }
+
+    /**
+     * Populates database with colors if it is empty.
+     */
+    private fun initDatabase(postInitAction: () -> Unit) {
+        GlobalScope.launch {
+            // Prepopulate colors
+            val colors = ColorDbModel.DEFAULT_COLORS.toTypedArray()
+            val dbColors = colorDao.getAllSync()
+            if (dbColors.isNullOrEmpty()) {
+                colorDao.insertAll(*colors)
+            }
+
+            // Prepopulate notes
+            val notes = NoteDbModel.DEFAULT_NOTES.toTypedArray()
+            val dbNotes = noteDao.getAllSync()
+            if (dbNotes.isNullOrEmpty()) {
+                noteDao.insertAll(*notes)
+            }
+
+            postInitAction.invoke()
+        }
+    }
+
+    override fun getAllNotesNotInTrash(): LiveData<List<NoteModel>> = notesNotInTrashLiveData
+
+    override fun getAllNotesInTrash(): LiveData<List<NoteModel>> = notesInTrashLiveData
+
+    private fun getAllNotesDependingOnTrashStateSync(inTrash: Boolean): List<NoteModel> {
+        val colorDbModels: Map<Long, ColorDbModel> = colorDao.getAllSync().map { it.id to it }.toMap()
+        val dbNotesNotInTrash: List<NoteDbModel> =
+            noteDao.getAllSync().filter { it.isInTrash == inTrash }
+        return dbMapper.mapNotes(dbNotesNotInTrash, colorDbModels)
+    }
+
+    override fun getNote(id: Long): LiveData<NoteModel> =
+        Transformations.map(noteDao.findById(id)) {
+            val colorDbModel = colorDao.findByIdSync(it.colorId)
+            dbMapper.mapNote(it, colorDbModel)
+        }
 
     override fun insertNote(note: NoteModel) {
-        TODO("Not yet implemented")
+        noteDao.insert(dbMapper.mapDbNote(note))
+        updateNotesLiveData()
     }
 
     override fun deleteNote(id: Long) {
-        TODO("Not yet implemented")
+        noteDao.delete(id)
+        updateNotesLiveData()
     }
 
     override fun deleteNotes(noteIds: List<Long>) {
-        TODO("Not yet implemented")
+        noteDao.delete(noteIds)
+        updateNotesLiveData()
     }
 
     override fun moveNoteToTrash(noteId: Long) {
-        TODO("Not yet implemented")
+        val dbNote = noteDao.findByIdSync(noteId)
+        val newDbNote = dbNote.copy(isInTrash = true)
+        noteDao.insert(newDbNote)
+        updateNotesLiveData()
     }
 
     override fun restoreNotesFromTrash(noteIds: List<Long>) {
-        TODO("Not yet implemented")
+        val dbNotesInTrash = noteDao.getNotesByIdsSync(noteIds)
+        dbNotesInTrash.forEach {
+            val newDbNote = it.copy(isInTrash = false)
+            noteDao.insert(newDbNote)
+        }
+        updateNotesLiveData()
     }
 
-    override fun getAllColors(): LiveData<List<ColorModel>> {
-        TODO("Not yet implemented")
-    }
+    override fun getAllColors(): LiveData<List<ColorModel>> =
+        Transformations.map(colorDao.getAll()) { dbMapper.mapColors(it) }
 
-    override fun getAllColorsSync(): List<ColorModel> {
-        TODO("Not yet implemented")
-    }
+    override fun getAllColorsSync(): List<ColorModel> = dbMapper.mapColors(colorDao.getAllSync())
 
-    override fun getColor(id: Long): LiveData<ColorModel> {
-        TODO("Not yet implemented")
-    }
+    override fun getColor(id: Long): LiveData<ColorModel> =
+        Transformations.map(colorDao.findById(id)) { dbMapper.mapColor(it) }
 
-    override fun getColorSync(id: Long): ColorModel {
-        TODO("Not yet implemented")
+    override fun getColorSync(id: Long): ColorModel = dbMapper.mapColor(colorDao.findByIdSync(id))
+
+    private fun updateNotesLiveData() {
+        notesNotInTrashLiveData.postValue(getAllNotesDependingOnTrashStateSync(false))
+        val newNotesInTrashLiveData = getAllNotesDependingOnTrashStateSync(true)
+        notesInTrashLiveData.postValue(newNotesInTrashLiveData)
     }
 }
