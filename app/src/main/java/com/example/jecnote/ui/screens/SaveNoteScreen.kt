@@ -1,10 +1,7 @@
 package com.example.jecnote.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -180,4 +177,105 @@ fun ColorItem(
 @Composable
 fun ColorItemPriew() {
     ColorItem(color = ColorModel.DEFALUT, onColorSelect = {})
+}
+
+@Composable
+private fun NoteCheckOption(
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .padding(top = 16.dp)
+    ) {
+        Text(text = "是否勾选笔记？", modifier = Modifier.weight(1f))
+        Switch(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
+
+@Preview
+@Composable
+fun NoteCheckOptionPrivew() {
+    NoteCheckOption(isChecked = true, onCheckedChange = {})
+}
+
+@Composable
+private fun ContentTextField(
+    modifier: Modifier = Modifier,
+    label: String,
+    text: String,
+    onTextChange: (String) -> Unit
+) {
+    TextField(
+        value = text,
+        onValueChange = onTextChange,
+        label = { Text(text = label) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        colors = TextFieldDefaults.textFieldColors(
+            backgroundColor = MaterialTheme.colors.surface
+        )
+    )
+}
+
+@Preview
+@Composable
+private fun ContentTextFieldPrivew() {
+    ContentTextField(label = "Title", text = "", onTextChange = {})
+}
+
+@Composable
+private fun SaveNoteContent(
+    note: NoteModel,
+    onNoteChange: (NoteModel) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        ContentTextField(label = "标题", text = note.title, onTextChange = { newTitle ->
+            onNoteChange.invoke(note.copy(title = newTitle))
+        })
+        ContentTextField(label = "正文", text = note.content, onTextChange = { newContent ->
+            onNoteChange.invoke(note.copy(content = newContent))
+        })
+
+        val canBeCheckedOff: Boolean = note.isCheckedOff != null
+        NoteCheckOption(isChecked = canBeCheckedOff, onCheckedChange = { canBeCheckedOffNewValue ->
+            val isCheckedOff: Boolean? = if (canBeCheckedOffNewValue) false else null
+            onNoteChange.invoke(note.copy(isCheckedOff = isCheckedOff))
+        })
+        PickedColor(color = note.color)
+    }
+}
+
+@Composable
+fun PickedColor(color: ColorModel) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .padding(top = 16.dp)
+    ) {
+        Text(
+            text = "色彩面板",
+            modifier = Modifier
+                .weight(1f)
+                .align(alignment = Alignment.CenterVertically)
+        )
+        NoteColor(
+            color = Color.fromHex(color.hex),
+            size = 4.dp,
+            border = 1.dp,
+            modifier = Modifier.padding(4.dp)
+        )
+    }
+}
+
+@Preview
+@Composable
+fun SaveNoteContentPrivew() {
+    SaveNoteContent(note = NoteModel(1, "title", "content"), onNoteChange = {})
 }
