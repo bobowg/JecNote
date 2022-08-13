@@ -1,29 +1,81 @@
 package com.example.jecnote.ui.screens
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.jecnote.domain.model.NoteModel
+import com.example.jecnote.routing.Screen
+import com.example.jecnote.ui.components.AppDrawer
 import com.example.jecnote.ui.components.Note
-import com.example.jecnote.ui.components.TopAppBar
 import com.example.jecnote.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun NotesScreen(viewModel: MainViewModel) {
     val notes: List<NoteModel> by viewModel.notesNotInTrash.observeAsState(listOf())
-    Column {
-        TopAppBar(title = "记事本", icon = Icons.Default.List, onIconClick = {})
-        NotesList(
-            notes = notes,
-            onNoteCheckedChange = { viewModel.onNoteCheckedChange(it) },
-            onNoteClick = { viewModel.onNoteClick(it) }
-        )
-    }
+    val scaffoldState: ScaffoldState = rememberScaffoldState()
+    val coroutineScope = rememberCoroutineScope()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "记事本",
+                        color = MaterialTheme.colors.onPrimary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        coroutineScope.launch { scaffoldState.drawerState.open() }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.List,
+                            contentDescription = "Drawer Button"
+                        )
+                    }
+                }
+            )
+        },
+        scaffoldState = scaffoldState,
+        drawerContent = {
+            AppDrawer(
+                currentScreen = Screen.Notes,
+                closeDrawerAction = {
+                    coroutineScope.launch {
+                        scaffoldState.drawerState.close()
+                    }
+                }
+            )
+        },
+        floatingActionButtonPosition = FabPosition.End,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                          viewModel.onCreateNewNoteClick()
+                },
+                contentColor = MaterialTheme.colors.background,
+                content = {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Note Button")
+                })
+        },
+        content = {
+            if (notes.isNotEmpty()){
+                NotesList(
+                    notes = notes,
+                    onNoteCheckedChange = { viewModel.onNoteCheckedChange(it) },
+                    onNoteClick = { viewModel.onNoteClick(it) }
+                )
+            }
+        }
+    )
+
 }
 
 @Composable
