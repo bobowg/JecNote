@@ -48,7 +48,9 @@ fun SaveNoteScreen(
             SaveNoteTopAppBar(
                 isEditingMode = isEditingMode,
                 onBackClick = { JetNotesRouter.navigateTo(Screen.Notes) },
-                onSaveNoteClick = { /*TODO*/ },
+                onSaveNoteClick = {
+                                  viewModel.saveNote(noteEntry)
+                },
                 onOpenColorPickerClick = {
                     coroutineScope.launch { bottomDrawerState.open() }
                 },
