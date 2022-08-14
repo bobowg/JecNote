@@ -51,7 +51,49 @@ fun TrashScreen(
             )
         },
         content = {
+            Content(
+                notes = notesInThrash,
+                onNoteClick = { viewModel.onNoteSelected(it) },
+                selectedNotes = selectedNotes
+            )
+            val dialog = dialogState.value
+            if (dialog != NO_DIALOG) {
+                val confirmAction: () -> Unit = when (dialog) {
+                    RESTORE_NOTES_DIALOG -> {
+                        {
+                            viewModel.restoreNotes(selectedNotes)
+                            dialogState.value = NO_DIALOG
+                        }
+                    }
+                    PERMANENTLY_DELETE_DIALOG -> {
+                        {
+                            viewModel.permanentlyDeleteNotes(selectedNotes)
+                            dialogState.value = NO_DIALOG
+                        }
+                    }
+                    else -> {
+                        {
+                            dialogState.value = NO_DIALOG
+                        }
+                    }
+                }
 
+                AlertDialog(
+                    onDismissRequest = { dialogState.value = NO_DIALOG },
+                    title = { Text(mapDialogTitle(dialog)) },
+                    text = { Text(mapDialogText(dialog)) },
+                    confirmButton = {
+                        TextButton(onClick = confirmAction) {
+                            Text("断续")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { dialogState.value = NO_DIALOG }) {
+                            Text("取消")
+                        }
+                    }
+                )
+            }
         }
     )
 }

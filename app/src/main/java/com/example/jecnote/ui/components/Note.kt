@@ -49,8 +49,8 @@ fun Note(
                 if (note.isCheckedOff != null) {
                     Checkbox(
                         checked = note.isCheckedOff,
-                        onCheckedChange = { isCheckedOff ->
-                            val newNote = note.copy(isCheckedOff = isSelected)
+                        onCheckedChange = { isChecked ->
+                            val newNote = note.copy(isCheckedOff = isChecked)
                             onNoteCheckedChange.invoke(newNote)
                         },
                         modifier = Modifier.padding(start = 8.dp)
