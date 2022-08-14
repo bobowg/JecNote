@@ -8,9 +8,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,12 +28,20 @@ import com.example.jecnote.routing.Screen
 import com.example.jecnote.ui.components.NoteColor
 import com.example.jecnote.util.fromHex
 import com.example.jecnote.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SaveNoteScreen(
     viewModel: MainViewModel
 ) {
     val noteEntry: NoteModel by viewModel.noteEntry.observeAsState(NoteModel())
+    val colors: List<ColorModel> by viewModel.colors.observeAsState(listOf())
+    val bottomDrawerState: BottomDrawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
+    val moveNoteToTrashDialogShownState: MutableState<Boolean> = rememberSaveable {
+        mutableStateOf(false)
+    }
     Scaffold(
         topBar = {
             val isEditingMode: Boolean = noteEntry.id != NEW_NOTE_ID
@@ -41,11 +49,52 @@ fun SaveNoteScreen(
                 isEditingMode = isEditingMode,
                 onBackClick = { JetNotesRouter.navigateTo(Screen.Notes) },
                 onSaveNoteClick = { /*TODO*/ },
-                onOpenColorPickerClick = { /*TODO*/ },
-                onDeleteNoteClick = {}
+                onOpenColorPickerClick = {
+                    coroutineScope.launch { bottomDrawerState.open() }
+                },
+                onDeleteNoteClick = {
+                    moveNoteToTrashDialogShownState.value = true
+                }
             )
         },
-        content = {},
+
+        content = {
+            BottomDrawer(
+                drawerState = bottomDrawerState,
+                drawerContent = {
+                    ColorPicker(colors = colors, onColorSelect = { color ->
+                        val newNoteEntry = noteEntry.copy(color = color)
+                        viewModel.onNoteEntryChange(newNoteEntry)
+                    })
+                },
+                content = {
+                    SaveNoteContent(note = noteEntry, onNoteChange = { updateNoteEntry ->
+                        viewModel.onNoteEntryChange(updateNoteEntry)
+                    })
+                }
+            )
+            if (moveNoteToTrashDialogShownState.value) {
+                AlertDialog(
+                    onDismissRequest = { moveNoteToTrashDialogShownState.value = false },
+                    title = { Text(text = "把纸条移到垃圾桶") },
+                    text = {
+                        Text(text = "你确定要把这张纸条移到垃圾箱？")
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.moveNoteToTrash(noteEntry) }) {
+                            Text(text = "继续吗？")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            moveNoteToTrashDialogShownState.value = false
+                        }) {
+                            Text(text = "取消")
+                        }
+                    }
+                )
+            }
+        }
     )
 }
 
@@ -267,7 +316,7 @@ fun PickedColor(color: ColorModel) {
         )
         NoteColor(
             color = Color.fromHex(color.hex),
-            size = 4.dp,
+            size = 40.dp,
             border = 1.dp,
             modifier = Modifier.padding(4.dp)
         )

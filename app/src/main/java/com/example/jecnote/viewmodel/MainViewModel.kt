@@ -52,4 +52,10 @@ class MainViewModel(
             }
         }
     }
+
+    fun moveNoteToTrash(note:NoteModel){
+        viewModelScope.launch(Dispatchers.Default) {
+            JetNotesRouter.navigateTo(Screen.Notes)
+        }
+    }
 }
