@@ -28,6 +28,8 @@ class MainViewModel(
     private var _selectedNotes = MutableLiveData<List<NoteModel>>(listOf())
     val selectedNotes: LiveData<List<NoteModel>> = _selectedNotes
 
+    val notesInTrash by lazy { repository.getAllNotesNotInTrash() }
+
     fun onNoteEntryChange(note: NoteModel) {
         _noteEntry.value = note
     }

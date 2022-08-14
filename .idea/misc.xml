@@ -46,6 +46,11 @@
         <entry key="../../../../../layout/compose-model-1660573808559.xml" value="0.1416611588455607" />
         <entry key="../../../../../layout/compose-model-1660574763400.xml" value="0.19074074074074074" />
         <entry key="../../../../../layout/compose-model-1660575583086.xml" value="0.19074074074074074" />
+        <entry key="../../../../../layout/compose-model-1660597435156.xml" value="0.19074074074074074" />
+        <entry key="../../../../../layout/compose-model-1660600601329.xml" value="0.781021897810219" />
+        <entry key="app/src/main/res/drawable/ic_basDelete.xml" value="0.103" />
+        <entry key="app/src/main/res/drawable/ic_basTrash.xml" value="0.103" />
+        <entry key="app/src/main/res/drawable/ic_basdelete.xml" value="0.103" />
         <entry key="app/src/main/res/drawable/ic_basline.xml" value="0.1" />
       </map>
     </option>
