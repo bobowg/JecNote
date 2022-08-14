@@ -87,7 +87,7 @@ private fun NotesList(
     LazyColumn {
         items(count = notes.size) { noteIndex ->
             val note = notes[noteIndex]
-            Note(note = note, onNoteClick = onNoteClick, onNoteCheckedChange = onNoteCheckedChange)
+            Note(note = note, onNoteClick = onNoteClick, onNoteCheckedChange = onNoteCheckedChange, isSelected = false)
         }
     }
 }
@@ -97,8 +97,8 @@ private fun NotesList(
 fun NotesListPrivew() {
     NotesList(notes = listOf(
         NoteModel(1,"Note 1","Content 1",null),
-        NoteModel(2,"Note 2","Content 2",null),
-        NoteModel(3,"Note 3","Content 3",null),
+        NoteModel(2,"Note 2","Content 2",false),
+        NoteModel(3,"Note 3","Content 3",true),
         NoteModel(4,"Note 4","Content 4",null),
         NoteModel(5,"Note 5","Content 5",null),
     ), onNoteCheckedChange ={} , onNoteClick ={} )

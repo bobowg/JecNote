@@ -5,8 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Checkbox
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,71 +18,55 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jecnote.domain.model.NoteModel
-import com.example.jecnote.ui.theme.rwGreen
 import com.example.jecnote.util.fromHex
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Note(
+    modifier: Modifier = Modifier,
     note: NoteModel,
     onNoteClick: (NoteModel) -> Unit = {},
-    onNoteCheckedChange: (NoteModel) -> Unit = {}
+    onNoteCheckedChange: (NoteModel) -> Unit = {},
+    isSelected: Boolean = false
 ) {
-    val backgroundShape: Shape = RoundedCornerShape(4.dp)
-    Row(
-        modifier = Modifier
+    val background = if (isSelected) Color.LightGray else MaterialTheme.colors.surface
+    Card(
+        shape = RoundedCornerShape(4.dp),
+        modifier = modifier
             .padding(8.dp)
-            .shadow(1.dp, backgroundShape)
-            .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .background(
-                Color.White, backgroundShape
-            )
-            .clickable(onClick = { onNoteClick(note) })
+            .fillMaxWidth(),
+        backgroundColor = background
     ) {
-        NoteColor(
-            modifier = Modifier
-                .align(alignment = Alignment.CenterVertically)
-                .padding(start = 16.dp, end = 16.dp),
-            color = Color.fromHex(note.color.hex),
-            size = 40.dp,
-            border = 1.dp,
-            padding = 4.dp
+        ListItem(
+            text = { Text(text = note.title, maxLines = 1) },
+            secondaryText = {
+                Text(text = note.content, maxLines = 10)
+            },
+            icon = {
+                NoteColor(color = Color.fromHex(note.color.hex), size = 40.dp, border = 1.dp)
+            },
+            trailing = {
+                if (note.isCheckedOff != null) {
+                    Checkbox(
+                        checked = note.isCheckedOff,
+                        onCheckedChange = { isCheckedOff ->
+                            val newNote = note.copy(isCheckedOff = isSelected)
+                            onNoteCheckedChange.invoke(newNote)
+                        },
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            },
+            modifier = Modifier.clickable {
+                onNoteClick.invoke(note)
+            }
         )
-        Column(modifier = Modifier
-            .weight(1f)
-            .align(alignment = Alignment.CenterVertically)) {
-            Text(
-                text = note.title,
-                maxLines = 1
-            )
-            Text(
-                text = note.content,
-                color = Color.Black.copy(alpha = 0.75f),
-                maxLines = 1,
-                style = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    letterSpacing = 0.25.sp
-                )
-            )
-        }
-        if (note.isCheckedOff!= null){
-            Checkbox(
-                checked = note.isCheckedOff,
-                onCheckedChange = {isChecked->
-                    val newNote = note.copy(isCheckedOff = isChecked)
-                    onNoteCheckedChange(newNote)
-                },
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .align(alignment = Alignment.CenterVertically)
-            )
-        }
     }
+
 }
 
 @Preview
 @Composable
 private fun NotePrivew() {
-    Note(note = NoteModel(1,"Note1","Content 1", isCheckedOff = true))
+    Note(note = NoteModel(1, "Note1", "Content 1", isCheckedOff = true), isSelected = false)
 }
