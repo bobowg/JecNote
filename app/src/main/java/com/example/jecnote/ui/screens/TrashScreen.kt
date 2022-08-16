@@ -192,14 +192,14 @@ fun ContentPriew() {
     Content(
         notes =
         listOf(
-            NoteModel(1, "title1", "content1"),
+            NoteModel(1, "title1", "content1",isCheckedOff = true),
             NoteModel(2, "title2", "content2"),
             NoteModel(3, "title3", "content3"),
             NoteModel(4, "title4", "content4")
         ),
         onNoteClick = {},
         selectedNotes = listOf(
-            NoteModel(1, "title1", "content1"),
+            NoteModel(1, "title1", "content1",isCheckedOff = true),
             NoteModel(2, "title2", "content2")
         )
     )

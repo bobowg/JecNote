@@ -240,7 +240,7 @@ private fun NoteCheckOption(
             .padding(8.dp)
             .padding(top = 16.dp)
     ) {
-        Text(text = "删除勾选笔记？", modifier = Modifier.weight(1f))
+        Text(text = "勾选删除笔记？", modifier = Modifier.weight(1f))
         Switch(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
